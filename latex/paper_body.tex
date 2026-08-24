@@ -496,11 +496,11 @@ With intermediate states added it is called trajectory empowerment.
 
 $I_{k}(s_{0})\  \triangleq \ I(A_{0:k - 1}\ S_{1:\ k - 1};\ S_{k}\ │\ s_{0})$
 
-\subsubsection{Local Optima}\label{local-optima}
+\section{Local Optima}\label{local-optima}
 
-Many people enjoy computer games, they can even hook some humans into addictive patterns. Empowerment fits best among intrinsic motivations for modelling this effect. The reward is high where there are many visited states, but the environment is controllable. An agent might get obsessed with flipping a switch that has tons of settings because it's easy to manipulate and offers immediate, predictable feedback. In the real world there are resource constraints which won't allow us to fixate on a game. Prediction-error driven agents can get stuck observing a noise source. Similarly, empowerment-driven agent can stuck observing controllable objects with many states.
+Many people enjoy computer games, games can even hook some humans into addictive patterns. Empowerment is suitable for modelling this effect. The reward is high where there are many visited states, but the environment is controllable. An agent might get obsessed with flipping a switch that has tons of settings because it's easy to manipulate and offers immediate, predictable feedback. In the real world there are resource constraints which won't allow us to fixate on a game. Prediction-error driven agents can get stuck observing a noise source. Similarly, empowerment-driven agent can stuck observing controllable objects with many states.
 
-There are many possible workarounds. People like playing video games, but even ones with addiction won't stick there because of resource constraints. Any real environment has resource constraints and resource sources so we can introduce resource constraints into virtual environments.
+This problem arises for all information-based rewards and it's likely not solvable on agent's side.. People like playing video games, but even ones with addiction won't stick there because of resource constraints. Any real environment has resource constraints and energy/resource sources so we can introduce such constraints into virtual environments.
 
 Lets add to the state energy coordinate \hl{\emph{e}∈{[}0,1{]}}
 
@@ -928,25 +928,26 @@ We can also try to reconstruct all $z^{(i\  < \ t)}$. In this case policy will b
 
 \section{Curiosity}\label{curiosity}
 
-Curiosity reward can be a combination of a few things: surprise, for example in the form of prediction error, novelty and information gain.
+Curiosity reward can be a combination of a few things: surprise, for example in the form of prediction error, novelty and learning progress.
 
-Novelty is proportional to state visitation count: it is high for new states and low for frequently visited states.
+Novelty is proportional to state visitation count: it is high for new states and low for frequently visited states. 
+It encourages large entropy H(S) of the state visitation distribution.
 
 Prediction error can be estimated from forward model:$\ f(s,\ a)\  - > \ {\widehat{s}}_{t + 1}$
 
 Reward then is $||s_{t + 1}\  - f(s,\ a)||_{}\ .$
 
-Information gain is a bit more complex. We have forward model $f_{\theta}(s_{t + 1}|s,\ a)$ and distribution over its weights $p(\theta|O_{t})$ given the history of transitions; $\ O_{t}\  = \ \{(s_{\tau}\ ,\ a_{\tau}\ ,\ s'_{\tau})\}$ for $\tau < t$.
+Learning progress is a bit more complex. We have forward model $f_{\theta}(s_{t + 1}|s,\ a)$ and distribution over its weights $p(\theta|O_{t})$ given the history of transitions; $\ O_{t}\  = \ \{(s_{\tau}\ ,\ a_{\tau}\ ,\ s'_{\tau})\}$ for $\tau < t$.
 
-Information gain is modeled as a change of distribution over parameters of forward model $f_{\theta}(s_{t + 1}|s,\ a)$ given a new observation.
+Learning progress is modeled as a change of distribution over parameters of forward model $f_{\theta}(s_{t + 1}|s,\ a)$ given a new observation.
 
-$IG_{t} ≝ \ KL\ \lbrack\ p(\theta\ |\ O_{t}\  \cup \ O_{t + 1})\ \|\ p(\theta\ |\ O_{t})\ \rbrack$
+$LP_{t} ≝ \ KL\ \lbrack\ p(\theta\ |\ O_{t}\  \cup \ O_{t + 1})\ \|\ p(\theta\ |\ O_{t})\ \rbrack$
 
 This can be approximated simply with improvement in prediction error.
 
 That is $r\  = ||\ f_{\theta_{k}}(s,\ a)\  - \ s_{t + 1}||_{}\ \  - ||_{}f_{\theta_{k + 1}}(s,\ a)\  - \ s_{t + 1}||_{}$
 
-Novelty and prediction error, unlike information gain are prone to noise-staring behaviour. That is, the reward is high when the agent observes pure noise. But there are easy workarounds. We can train a model that predicts action given previous and current states. $g_{\theta}(s_{t + 1},\ s_{t})\  - > \ a$. Higher layers of this model can be used as feature extractors, that keep information only about controllable aspects of the environment. These features can be used then instead of raw states in novelty or surprise rewards.
+Novelty and prediction error, unlike learning progress are prone to noise-staring behaviour. That is, the reward is high when the agent observes pure noise. But there are easy workarounds. We can train a model that predicts action given previous and current states. $g_{\theta}(s_{t + 1},\ s_{t})\  - > \ a$. Higher layers of this model can be used as feature extractors, that keep information only about controllable aspects of the environment. These features can be used then instead of raw states in novelty or surprise rewards.
 
 Let's compare curiosity with empowerment.
 
@@ -964,7 +965,13 @@ High $H(S' \mid S)$ implies high $H(S')$.
 
 So maximising $H(S')$ is not identical to maximizing $H(S' \mid S)$. $H(S' \mid S)$ encourages rewards states from which many different states can occur immediately(or in k-steps with k-steps empowerment). But H(S') rewards visiting the whole state space.
 
-\section{}\label{section}
+\section{Information gain}\label{information-gain}
+
+Assume our world model estimates world state with z and tracks history in h. Then we can define information gain about world state as $KL(q(z \mid o, h) \parallel p(z \mid h)) = I(o; z \mid h)$
+
+That is how much have we learned about world given a new observation o. Similar to other information-based rewards IG is prone to "camping on a toy" issue.
+
+Note: term "information gain" is applicable to different things, including model parameters. In this case we get already discussed learning progress.
 
 \section{Predictive Coding}\label{predictive-coding}
 
