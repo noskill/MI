@@ -1,5 +1,35 @@
 % !TeX root = main.tex
 % !TeX program = xelatex
+
+\section{Introduction}
+In this article we consider intrinsic motivation in reinforcement learning. Methods of RL are well developed from both theoretical foundation and practical how-to. They are very effective given dense reward function. 
+Some progress has been made in defining universal intrinsic reward functions that are applicable in different environments. Here intrinsic means that it is computed only from what agent observes during it's lifetime, not using some hidden environment properties. This is especially interesting given that nature doesn't define reward function for biological organisms, instead it must be the case that evolution caused development of some kind of intrinsic preferences. 
+
+Article has following structure:
+First motivation from biology.
+The next few sections are essentially tutorial-style overview of empowerment and mutual information estimation.
+we also cover:
+
+curiosity and information gain;  
+unsupervised skill discovery; 
+
+The tutorial part with appending contains derivation of main identities and discuss interesting corner-cases.
+   
+We overview some methods of world modelling and their possible use for intrinsic reward computation.
+
+We conclude with Research Agenda: experiments to improve our understanding of discussed intrinsic motivation methods.
+
+This article is inspired by works of Jürgen Schmidhuber, who developed the first formal computational methods for intrinsic motivation and artificial curiosity in reinforcement learning. And line of works by Michael Levin on adaptive behaviour in biological systems across different scales, starting from the level of biochemical networks.
+
+We propose perspective research direction of adaptability in artificial neural networks with the goal of development learning systems that could demonstrate neural plasticity similar to cases observed in biological networks.
+
+A broader question motivating the research agenda is whether local intrinsic learning signals can produce not only exploration, but also progressively more complex  adaptive behaviour and organization at higher levels.
+
+
+We propose biologically inspired recurrent architecture and a specific environment suitable for evaluation of intrinsic motivation methods.
+
+
+
 \section{Motivation from biology}\label{motivation-from-biology}
 
 AI as a field often draws inspiration from biology.
@@ -10,11 +40,11 @@ Molecular networks have memory including pavlovian conditioning, associative lea
 
 Also there is no large difference between neural cells and somatic cells. Somatic cells exhibit learning, problem solving, they also use electricity for communication.
 
-Some notable examples of plasticity and problem solving:
+Some notable examples of plasticity and problem solving in image \ref{low-level-learning-bio}
 
-
-
+%
 \begin{figure}
+\label{low-level-learning-bio}
 \includegraphics[width=5.67708in,height=2.22917in]{figures/image8.png}
 \caption{Kidney tubules in the newt are made with a constant size, whereas cell size can vary drastically under polyploidy. The same shape achieved through different molecular mechanisms: cell to cell communication vs cytoskeleton bending.}
 \end{figure}
@@ -33,6 +63,23 @@ Some notable examples of plasticity and problem solving:
 \end{figure}
 
 \hl{But perhaps the most striking and important case is cancer plasticity. Tumors switch between metabolic pathways (e.g., glycolysis to oxidative phosphorylation) to survive fluctuating conditions, a form of tissue-level adaptability.}
+
+
+For more detailed overview see Michael Levin's interview \emph{Michael Levin: Intelligence Beyond the Brain} \cite{levin_intelligence_beyond_brain}.
+\newline
+
+\textbf{evolutionary trend hypothesis}
+
+There appears to be a trend in growing intelligence across biosphere. Both - upper cap and average(measured by total biomass). For insects it's estimated that eusocial species make now around 50\% \cite{wilson1971insect} of insects biomass while paradoxically constituting only about 2\% of species. Modern colony size are relatively recent invention \cite{vida2025postkpg} and there is growing evidence that colony size is a primary drive of specialisation \cite{bellroberts2024evolution}. This might appear obvious in hindsight given growing specialisation of people in modern economy. This transition provides evidence that evolution may increase not only the upper bound of intelligence, but also the weighted by biomass prevalence of complex adaptive organization.
+
+$C_{bar}(t) = \frac{\sum_i B_i(t) C_i(t)}  {\sum_i B_i(t)}$
+
+here $C$ is intelligence measure\\
+$B$ - biomass  \\
+i - cells, organisms or colonies.
+
+Possible mechanism is random specialization of some species in intelligence-based adaptation with later evolutionary arms race.
+
 
 \section{Learning hierarchy}\label{learning-hierarchy}
 We can very roughly sort different learning types from more simple to more advanced forms, that likely appeared later in evolutionary history.
@@ -97,7 +144,7 @@ Cultural learning over generations, learning from purely symbolic input e.g. rea
 \end{figure}
 
 
-There is no universally accepted hierarchy covering all forms of learning and cognition. So this classification is rather a heuristic. But there is good evidence that  non-associative mechanisms are evolutionarily ancient, whereas flexible planning, metacognitive control, teaching, and cumulative culture appeared later in the lineages in which they evolved. Also there is a trend in rising upper bound of intelligence achievable by living organisms.
+There is no universally accepted hierarchy covering all forms of learning and cognition. So this classification is rather a heuristic. But there is good evidence that  non-associative mechanisms are evolutionarily ancient, whereas flexible planning, metacognitive control, teaching, and cumulative culture appeared later in the lineages in which they evolved.
 
 
 Level 2 and Level 3 learning types can be observed already in insects. Bumblebee for example would play with appropriately sized balls without any external reward from only intrinsic motivation. Another example is Portia spiders which employ a sophisticated hunting strategy involving mimicry, detours, and ambush tactics when hunting on other spiders. Portia often attacks other spiders in their own web, so it has to be clever. Sometimes it will literally lure the prey by mimicking vibrations of an insect being stuck. It has been reported that Portia can learn to hunt a new, never seen before spider by trial and error.
@@ -635,11 +682,11 @@ Here we describe prominent models Dreamer v3 and TWISTER and their components.
 	\caption{Key components of DREAMER/TWISTER}
 \end{figure}
 
-\href{https://arxiv.org/pdf/1807.03748}{\ul{https://arxiv.org/pdf/1807.03748}}
+Contrastive Predictive Coding \cite{oord2018representation}
 
-\href{https://arxiv.org/pdf/2301.04104}{\ul{https://arxiv.org/pdf/2301.04104}}
+DreamerV3 \cite{hafner2023mastering}
 
-\href{https://arxiv.org/pdf/2503.04416}{\ul{https://arxiv.org/pdf/2503.04416}}
+TWISTER \cite{burchi2025learning}
 
 
 Key components of DREAMER/TWISTER
@@ -967,13 +1014,20 @@ So maximising $H(S')$ is not identical to maximizing $H(S' \mid S)$. $H(S' \mid 
 
 \section{Information gain}\label{information-gain}
 
-Assume our world model estimates world state with z and tracks history in h. Then we can define information gain about world state as $KL(q(z \mid o, h) \parallel p(z \mid h)) = I(o; z \mid h)$
+Assume our world model estimates world state with z and tracks history in h. Then we can define information gain about world state as \\
+$KL(q(z \mid o, h) \parallel p(z \mid h)) = I(o; z \mid h)$
 
-That is how much have we learned about world given a new observation o. Similar to other information-based rewards IG is prone to "camping on a toy" issue.
+That is how much have we learned about world given a new observation o.
 
 Note: term "information gain" is applicable to different things, including model parameters. In this case we get already discussed learning progress.
 
-\section{Predictive Coding}\label{predictive-coding}
+This quantity could be used as addition to prediction error. We have this relation:
+
+$H(O|h) = E_{z \~ p(z \parallel h)} H(O \parallel z, h) + I(O; Z \mid h)$
+
+The first quantity is unreducible or so called \textbf{aleatoric} uncertainty. This is uncertainty that remains even if we have good state estimation. The second term is the uncertainty caused by not knowing z. If agent encounters a source of noise prediction entropy(and error) will be high, but information gain small hinting at large aleatoric uncertanty. On other case consider agent exploring unknown part of the map, in this case prediction error will be high, but information gain also large. We could use this to reward useful exploration much more than just watching random events.
+
+Similar to other information-based rewards IG is prone to "camping on a toy" issue.
 
 \section{SFA}\label{sfa}
 
@@ -1006,7 +1060,7 @@ $L_{sfa}\  = \ L_{slowness}\  + \ L_{variance\ }\  + \ L_{correlation}$
 
 Imagine an agent that can see part of an image, can move on it and can change pixels. Empowerment alone won't produce interesting non-random looking images. We can use MI between patches of the image I(top-left, top-right) as reward in this case. This corresponds to regularized minimum description length. Regularization is needed to avoid obvious solutions when the image is blank. We can directly use any MI estimator or just use masked prediction $p\theta(S_{mask}|S_{nonmasked})$. Trivial solutions will be avoided by standard entropy bonus for policy, by novelty bonus etc.
 
-It\textquotesingle s also possible to use generative models such as VAE as approximator for description length.
+It's also possible to use generative models such as VAE as approximator for description length.
 
 $description\ length\  \approx \  - \ log_{2}p\theta(s)\  < = \  - ELBO(s)\ /\ ln\ 2\ $
 
@@ -1077,7 +1131,7 @@ We are starting from KL divergence $D_{KL}(P || Q) =  \int_{}^{}p(u) log \frac{p
  
 \textbf{Step 1. Define Gibbs density.}
 
-Let q(u) be a probability density and T(u) be our arbitrary function. We create a new valid probability density, $g(u)$, by weighting q(u) with $e^{T(u)}$ to ensure g(u) integrates to 1, we must divide by a normalizing constant Z:
+Let q(u) be a probability density and T(u) be our arbitrary function. We create a new valid probability density, $g(u)$, by weighting q(u) with $e^{T(u)}$. To ensure g(u) integrates to 1, we must divide by a normalizing constant Z:
 
 \begin{quote}
 $g(u)\  =  \frac{e^{T(u)}q(u)\ }{Z}$
@@ -1120,44 +1174,67 @@ $D_{KL}(P\ ||\ Q) \geq E_{P}\ T(u)\  - log\ E_{Q}\ e^{T(u)}\ \ $
 By definition:
 $I(X;Y)=D_{KL}\big(P(X,Y)\parallel P(X)P(Y)\big)$
 
-We get mutual information with P having density p(x, y) - joint density; and Q having density p(x)p(y) - the product of the marginal densities:
+We get mutual information(from definition) with P having density p(x, y) - joint density; and Q having density p(x)p(y) - the product of the marginal densities:
 
 $I(X;\ Y)\  \geq \ E_{P(X,Y)}T(x,y)\  - \ log\ E_{P(X)P(Y)}\ e^{T(x,y)}$
 
 We got lower bound for KL and mutual information.
 
-We can optimise this estimator by finding better function T e.g. with gradient ascend.
+We can optimise this estimator by finding better function $T$ e.g. with gradient ascend.
 
-\section{7. Research agenda}\label{experiments-options-to-try}
+\section{Research agenda}\label{experiments-options-to-try}
 
-We conclude with discussion of possible experiments.
+We conclude with discussion of possible experiments intended to test if existing intrinsic motivation methods can produce biological adaptability on different levels.
 
+\subsection{Environment for IM}
 There are two properties of biological environments that counter failure modes of information-based rewards:
 1) world is adversarial
 2) energy is scarce
 
 We introduce environment suitable for intrinsic reward evaluation.
 
-action space:
-motion, rotation
-observations:
-angle and distance to near prey, energy level
-
-additional mechanics:
-when energy level is low
-
-
-
-
-Recurrent communicating cells trained with intrinsic motivation but without backpropagation.
-
-\includegraphics[width=3.55612in,height=3.96668in]{figures/image2.png}
-
-Analogous to different types of cells having the same genome but different behaviour two LSTMs can share the same weights.
 
 Predator-prey with energy in 2d plane.
-- energy-constrained empowerment;
-- play and self-generated curricula;
-- communication;
-- predator–prey environments;
-- hierarchical agents.
+action space:motion, rotation \\
+observations:angle and distance to near prey, energy level, nearby message\\
+
+additional mechanics:\\
+when energy level is low agents actions get lower magnitude and/or become noisy.
+
+
+\subsection{recurrent model}
+
+We propose to study a network of recurrent modules where every module is treated as a local agent. Each agent has its own hidden state, observations, incoming messages, actions and intrinsic reward. There is no reward defined for the network as a whole. The modules can communicate during the forward pass, but messages are detached before being passed between agents. Consequently, gradients from one agent cannot propagate through the internal computations of another agent.
+
+For a system of $N$ agents communicating with messages $m$ the shared recurrent update can be written as
+
+\begin{equation}
+h_{i,t+1} = F_{\theta}(h_{i,t}, o_{i,t}, m_{i,t}),
+\qquad i \in \{1,\ldots,N\},
+\end{equation}
+
+where all agents use the same parameters $\theta$, while $h_{i,t}$, $o_{i,t}$ and the position of an agent in the communication graph are different. The shared parameters are analogous to a common genome, while different hidden states, inputs and network positions provide different local contexts. Functional specialisation may therefore emerge without assigning a permanent identity or a separate set of parameters to every module.
+
+Every agent computes an intrinsic reward $r_{i,t}$ only from its own interaction history.
+
+The primary experiment is to test whether the recurrent modules develop stable and complementary roles and whether their joint dynamics exhibit adaptive behaviour that is not explicitly rewarded at the system level. 
+
+The basic ablation removes weight sharing. In this condition each module has an independent recurrent function
+
+\begin{equation}
+h_{i,t+1} = F_{\theta_i}(h_{i,t}, o_{i,t}, m_{i,t}).
+\end{equation}
+
+Independent parameters may make specialisation easier, because different roles can be stored directly in $\theta_i$. Shared weights provide a stronger test: different roles must emerge from local state, experience and network context. 
+
+This type of agent may be evaluated in a collectively embodied task e.g. sensor + motor cells jointly controlling motion in a maze. In such environment communication is mandatory. Also it is possible to test in independently embodied agents. Good example is predator-prey environment where each cell controls one predator. This type environment is especially suitable for communication ablation study with message passing between agents disabled.
+
+This experiment is not intended to prescribe a final architecture. Its purpose is to test whether local intrinsic objectives, recurrent memory, communication and a shared learning rule are sufficient ingredients for the emergence of functional differentiation and higher-level adaptive organisation.
+
+TODO:  
+1. Какие классы intrinsic objectives существуют.
+2. Что именно каждый из них оптимизирует.
+3. Почему локальная оптимизация не гарантирует полезного поведения.
+4. Как representation, embodiment и temporal abstraction меняют результат.
+5. Какие эксперименты позволяют проверить предложенную картину.
+
