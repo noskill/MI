@@ -815,8 +815,10 @@ I(e_{};\ z_{})\  \approx \ I({(h}_{t},\ a_{t:t + k}),\ h_{t + k})\  \approx \ I(
 
 
 By chain rule for MI(see appendix)
-
-$I((s,\ A);\ S')\  = \ I(s\ ;\ S')\  + I(A;S' \mid s)$
+\begin{equation}
+I((s,\ A);\ S')\  = \ I(s\ ;\ S')\  + I(A;S' \mid s)
+\label{eq-mi-nce}
+\end{equation}
 
 As you can see this quantity can reward behaviour when future trajectory is predictable even without knowing action.
 
@@ -831,6 +833,13 @@ $H(S')\  - \ H(S'|s)$ + $H(S' \mid s) - H(S' \mid A,s)$ = $H(S') - H(S' \mid A,s
 $I((s,\ A);\ S')$ = $H(S') - H(S' \mid A,s)$
 
 This is difference $H(S')$ vs $H(S' \mid s)$ tells us what we are trying to distinguish/predict from s and A. AC-CPC uses for negatives all possible states S in a batch. While $H(S' \mid s)$(as in empowerment) would require us to construct negatives only from states we could arrive from the current state $s$!
+
+Despite equation \ref{eq-mi-nce} being sound using global pool of states(or their embeddings) has issues. The first term $I(S;S`)$ doesn't involve actions. Suppose the positive pair from RTS-game environment is:\\
+current frame: your base, five workers, daytime; \\
+future frame: nearly the same scene after a few seconds.\\
+A global negative might include completely different map locations, enemy type, time elapsed from start, different army and resource count. It's easy for discriminator to distinguish even without using actions. At this point $L_{nce}$ is close to zero and learning stops.
+Empowerment formulation on other hand requires "hard negatives". That is states produced from the same initial condition, but under alternative actions.
+The good thing is that world models allow us to generate realistic virtual episodes!
 
 \section{Diversity is all you need}\label{diversity-is-all-you-need}
 
@@ -947,9 +956,9 @@ Discouraged property & Small marginal next-state variability & Peaky action dist
 \end{longtable}
 }
 
-In equation 1 variable Z is sampled ones per episode, S is picked uniformly from the whole trajectory, so the term $\ H(Z\ |\ S$) is computed with respect to the entire trajectory. But there are situations when examining multiple states might be desirable. We might be interested in achieving the same state by different means, for example robot can place a spoon in a mug either by taking a spoon and placing it or by trying to scoop the spoon. In this case intermediate states are clearly distinguish skill vector, but the end state is the same. By default DIAYN will try to avoid visiting the same state from two skills. We could counter it by either by adding external reward, curiosity, or adding structure to the skill vector.
+In equation 1 variable Z is sampled ones per episode, S is picked uniformly from the whole trajectory, so the term $\ H(Z\ |\ S$) is computed with respect to the entire trajectory. But there are situations when examining multiple states might be desirable. We might be interested in achieving the same state by different means, for example robot can place a spoon in a mug either by taking a spoon and placing it or by trying to scoop the spoon. In this case intermediate states are clearly distinguish skill vector, but the end state is the same. By default DIAYN will try to avoid visiting the same state from two skills. We could counter it by either by adding external reward, curiosity, or adding structure to the skill vector as discussed below:
 
-\subsubsection{Structural DIAYN}\label{structural-diayn}
+\textbf{Structural DIAYN}\label{structural-diayn}
 
 For example let vector z be concatenation of vectors $z_{i}$.
 
@@ -971,9 +980,9 @@ If we choose to use just two vectors we will have:
 
 Any two skills that differ only in $z^{(1)}$ therefore must converge to (almost) the same final state, reached via recognisably distinct trajectories.
 
-We can also try to reconstruct all $z^{(i\  < \ t)}$. In this case policy will be encouraged to treat early $z^{i}\ $ as a high-level coarse plan or ``style'' and later $z^{i}$ further nuancing the behavior. Other options such as using a sliding window are possible.
+We can also try to reconstruct all $z^{(i\  < \ t)}$. In this case policy will be encouraged to treat early $z^{i}\ $ as a high-level coarse plan or ``style'' and later $z^{i}$ further nuancing the behaviour. Other options such as using a sliding window are possible.
 
-\section{Curiosity}\label{curiosity}
+\section{Curiosity and Learning progress}\label{curiosity-lp}
 
 Curiosity reward can be a combination of a few things: surprise, for example in the form of prediction error, novelty and learning progress.
 
@@ -1014,20 +1023,21 @@ So maximising $H(S')$ is not identical to maximizing $H(S' \mid S)$. $H(S' \mid 
 
 \section{Information gain}\label{information-gain}
 
-Assume our world model estimates world state with z and tracks history in h. Then we can define information gain about world state as \\
-$KL(q(z \mid o, h) \parallel p(z \mid h)) = I(o; z \mid h)$
+Assume our world model estimates world state with z and tracks history in h. Then we can define (point) information gain about world state as \\
+$KL(q(z \mid o, h) \parallel p(z \mid h)) = I_{pmi}(o; z \mid h)$
 
 That is how much have we learned about world given a new observation o.
 
-Note: term "information gain" is applicable to different things, including model parameters. In this case we get already discussed learning progress.
+Note: term "information gain" is applicable to different things, including model parameters. In this case we have change in distribution over model parameters which is directly related to learning progress.
 
 This quantity could be used as addition to prediction error. We have this relation:
 
-$H(O|h) = E_{z \~ p(z \parallel h)} H(O \parallel z, h) + I(O; Z \mid h)$
+$ H(O \mid h) = E_{z \sim p(z \mid h)}[H(O \mid z,h)] + I(O;Z \mid h)$
 
 The first quantity is unreducible or so called \textbf{aleatoric} uncertainty. This is uncertainty that remains even if we have good state estimation. The second term is the uncertainty caused by not knowing z. If agent encounters a source of noise prediction entropy(and error) will be high, but information gain small hinting at large aleatoric uncertanty. On other case consider agent exploring unknown part of the map, in this case prediction error will be high, but information gain also large. We could use this to reward useful exploration much more than just watching random events.
 
-Similar to other information-based rewards IG is prone to "camping on a toy" issue.
+Similar to other information-based rewards IG is prone to "camping on a toy" issue. For example with fair dice we have $I(O;Z|H) = H(Z|H) - H(Z|O,H) = ln(6) - 0 = ln(6) nats$
+
 
 \section{SFA}\label{sfa}
 
@@ -1055,6 +1065,9 @@ $L_{correlation}\  = \ {\frac{1}{N}\| C}_{Y}\  \circ \ (1\ –\ I)\ \|_{F²}$ - 
 Then objective is
 
 $L_{sfa}\  = \ L_{slowness}\  + \ L_{variance\ }\  + \ L_{correlation}$
+
+
+This is potentially usefully augmentation for action conditioned state embeddings.
 
 \section{Predictive information bonus and MDL}\label{predictive-information-bonus-and-mdl}
 
@@ -1230,6 +1243,10 @@ Independent parameters may make specialisation easier, because different roles c
 This type of agent may be evaluated in a collectively embodied task e.g. sensor + motor cells jointly controlling motion in a maze. In such environment communication is mandatory. Also it is possible to test in independently embodied agents. Good example is predator-prey environment where each cell controls one predator. This type environment is especially suitable for communication ablation study with message passing between agents disabled.
 
 This experiment is not intended to prescribe a final architecture. Its purpose is to test whether local intrinsic objectives, recurrent memory, communication and a shared learning rule are sufficient ingredients for the emergence of functional differentiation and higher-level adaptive organisation.
+
+\subsection{automatic curriculum in two-level agent}
+
+Hierarchical empowerment?
 
 TODO:  
 1. Какие классы intrinsic objectives существуют.
