@@ -196,7 +196,7 @@ Also there is growing evidence about tool use by insects. Image 5 shows the expe
 \href{https://www.britishecologicalsociety.org/ants-adapt-tool-use-to-avoid-drowning/}{%
 \includegraphics[width=\linewidth,height=0.20\textheight,keepaspectratio]{figures/image5.png}}
 \end{minipage}
-\caption{Examples discussed in the text. Each image links to its original online source.}
+\caption{Examples of play, complex hunting strategy and tool use in insects. Each image links to its original online source.}
 \label{fig:biological-motivation-examples}
 \end{figure}
 
@@ -228,61 +228,93 @@ Does intrinsic motivation in RL lead level 2 and level 3 learning types:
   Does it lead to play and episodic learning?
 \end{enumerate}
 
-\section{Basic math definitions}\label{basic-math-definitions}
+
+\pagebreak
+\section{Basic mathematical definitions}\label{basic-math-definitions}
+
+
+\subsection*{Entropy}
+
+For a discrete random variable $Y$ with probability mass function $p(y)$ we define entropy H:
+
+\begin{equation}
+	H(Y)=-\sum_y p(y)\log p(y).
+\end{equation}
+
+\begin{equation}
+	H(Y|Z) =	-\sum_{y,z}p(y,z)\log p(y|z).
+\end{equation}
+
+
+\subsection*{Kullback--Leibler divergence}
+
+For two probability distributions $P$ and $Q$ over the same sample space,
+
+\begin{equation}
+	D_{\mathrm{KL}}(P\|Q)
+	=
+	\sum_x p(x)\log\frac{p(x)}{q(x)}
+	=
+	\mathbb{E}_{x\sim P}
+	\left[
+	\log p(x)-\log q(x)
+	\right].
+\end{equation}
+
+
+
+\subsection*{Mutual information}
+
 
 Mutual information of two random variables Y, Z
 
 \begin{equation}
-I(Y;Z) := D_{KL}\bigl(P(Y,Z)\,\|\,P(Y)P(Z)\bigr)
-\label{eq:mutual-information-kl}
+	I(Y;Z) := D_{KL}\bigl(P(Y,Z)\,\|\,P(Y)P(Z)\bigr)
+	\label{eq:mutual-information-kl}
 \end{equation}
 
-Kullback-Liebner divergence
+Mutual information defined via entropy
 
 \begin{equation}
-D_{KL}(P\,\|\,Q)
-= \sum_x P(x)\log\frac{P(x)}{Q(x)}
-= \mathbb{E}_{P}\bigl[\log P(x)-\log Q(x)\bigr]
-\label{eq:kl-divergence}
+	I(Y;Z) := H(Y)-H(Y\mid Z) = H(Z)-H(Z\mid Y)
+	\label{eq:mutual-information-entropy}
 \end{equation}
 
-Here P, Q - probability distribution over the same sample space.
 
-Mutual information
+Pointwise mutual information $ \operatorname{PMI}(x,y)
+= \log \frac{p(x,y)}{p(x)p(y)},$ where x and y are events, not random variables.
 
-\begin{equation}
-I(Y;Z) := H(Y)-H(Y\mid Z) = H(Z)-H(Z\mid Y)
-\label{eq:mutual-information-entropy}
-\end{equation}
+It's possible for $\operatorname{PMI}$ to be negative, but it's expectation is always non-negative.
 
-Here H is entropy.
+$I(X;Y)  =  {\mathbb{E}}_{(x,y) \sim p(x,y)} \lbrack \operatorname{PMI}(x,y) \rbrack$
 
-H(Y) = - $\sum_{y}^{}p(y)\ log\ p(y)$
-
-Pointwise mutual information $PMI(x,y) = log\ \frac{P(x,y)}{P(x) \cdot P(y)}$ where x, and y are events, not random variables.
-
-$I(X;Y)\  = \ {\mathbb{E}}_{(x,y) \sim p(x,y)}\ \lbrack\ PMI(x,y)\ \rbrack$
+\subsection{Reinforcement learning}
 
 Reinforcement learning objective - maximising expected discounted reward
 
 \begin{equation}
-J(\pi) := \mathbb{E}_{\pi}\left[\sum_t \gamma^t r(s_t)\right]
+J(\pi) := \mathbb{E}_{p_π(τ)}\left[\sum_t \gamma^t r_t\right]
 \label{eq:rl-objective}
 \end{equation}
+$\pi$ - policy.\\ 
+$\gamma$ - discount factor in range $(0, 1]$ \\
+$s_{t}$ - state at time t.\\
+$p_π(τ)$ - trajectory distribution under policy. 
 
-$\pi$ \hl{- policy.} $\gamma$ \hl{- discount factor in range (0, 1)} $s_{t}$ \hl{- state at time t.}
+For a concise introduction to policy-gradient methods, see \cite{peters2010policy}.
 
 \section{Empowerment in reinforcement learning}\label{empowerment-in-reinforcement-learning}
 
-Mutual information between agent's action and observable states can be used as reward. 
-Empowerment is defined as channel capacity from agent's action to subsequent state:
+Mutual information between agent's action and observable states can be used as reward. In this section, we derive such a reward and discuss its relation to empowerment. Empowerment is defined as channel capacity from agent's action to subsequent state \cite{klyubin2005empowerment}:
 
 \begin{equation}
-\mathcal{E}(s) = \max_{\pi(a\mid s)} I_\pi(A;S'\mid S=s).
+\mathcal{E}(s) = \max_{p(a\mid s)} I(A;S'\mid S=s).
 \label{eq:empowerment-definition}
 \end{equation}
 
-We can in principle optimise policy as to increase quantity $I(A;S' \mid s)$ which gives us lower-bound estimation of empowerment.
+We can optimise policy to increase $I_{\pi}(A;S'|s)$; $I_{\pi}(A;S'|s) \leq \mathcal{E}(s)$ gives us lower-bound estimation of empowerment.
+
+We will refer to this quantity as on-policy empowerment.
 
 In order to gain some intuition we will consider different formulations of the same quantity:
 
@@ -302,7 +334,7 @@ I(A;S'\mid s) = H(A\mid s)-H(A\mid S',s).
 \label{eq:empowerment-inverse-entropy}
 \end{equation}
 
-Change $I(A; S' \mid s)$  to expectation over events form:
+We can rewrite $I(A; S' \mid s)$  as expectation over events:
 
 First expand $H(S' \mid s)$:
 
@@ -344,71 +376,76 @@ I(A;S'\mid s)
 \label{eq:empowerment-log-ratio}
 \end{equation}
 
-Here s is current state, $S'$ is the next state and $A$ is action taken in state s.
+Here, s is the current state, $S'$ is the next state and $A$ is the action taken in state s.
 
 $A$ and $S'$ are random variables but $s$ is not.
 
-It's important to note that removing conditioning on the current state $s$, as in $I(A;S'$) or I(A; S) will lead to a degenerate solution.
+It's important to note that removing conditioning on the current state $s$, as in $I(A;S')$ or $I(A; S)$ will lead to a different, possibly degenerate solution.
 
-Maximising H(S') - H(S'\textbar A) means that future state S' should be predictable from action alone, and I(A; S) = H(S) - H(S\textbar A) means the agent should directly map the action to state.
+Here $I(A;S')$ is action - future state mutual information and  $I(A; S)$ - action - current state.
 
-What is the behavior that is encouraged by this type of reward?
+Maximising $H(S') - H(S'\textbar A)$ means that future state $S'$ should be predictable from action alone, and $I(A; S) = H(S) - H(A \mid S)$ means the agent should directly map current state to action. For example always choose turn left in one room and turn right in an another room. In this case $I(A;S)$ will be high, but $I(A;S'|s)$ close to zero.
+
+What is the behaviour that is encouraged by this type of reward?
 
 First term that is maximised $H(S' \mid s)$ is conditional entropy of future state $S'$.
 
 Entropy is low for spiky, concentrated probability distributions and high for more even distributions.
 
-For example, entropy of a binary random variable $p(s_{i})\  = \ 0.5$ will be 1 bit, with 10 possible outcomes with probability $p(s_{i})\  = \ 0.1$ entropy is \textasciitilde3.32 bit.
+A binary random variable with probabilities (0.5,0.5) has an entropy of one bit. A variable with 10 possible outcomes with probability $p(s_{i})\  = \ 0.1$ entropy is \textasciitilde3.32 bits.
 
-So $H(S' \mid s)$ is high then our agent visits a large and diverse set of states.
+So $H(S' \mid s)$ is high then our agent visits a large and diverse set of states. To be more precise it means for given state $s$ policy could achieve diverse set of future states. Global state visitation entropy $H(S')$ is related to conditional as $H(S')=H(S'∣S)+I(S';S)$, so $H(S')$ is at least as large as $H(S'∣S)$. What it means in practice agent could stay in an relatively small area with a lot of achievable states it could switch between.
 
-Second term is minimised: $H(S' \mid A,s)$, this is the entropy of the future state given the current state and action. This term encourages policy to take actions that have predictable outcomes. For deterministic environment we have $H(S' \mid A,s)$ = 0, so only the first term is optimised.
+Second term is minimised: $H(S' \mid A,s)$, this is the entropy of the future state given the current state and action. This term encourages policy to take actions that have predictable outcomes. In a deterministic environment we have $H(S' \mid A,s)$ = 0, so only the first term is optimised.
 
 Consider this grid world, with actions up, down, left, right:
 
 \includegraphics[width=5.27991in,height=4.40319in]{figures/image12.png}
 
-Being in the central cell will have highest value of $H(S' \mid s)$, $- \sum_{i = 0}^{3}0.25\ log_{2}0.25\  = \ 2$ bit.
+Being in the central cell will have highest value of $H(S' \mid s)$, $- \sum_{i = 0}^{3}0.25\ log_{2}0.25\  = \ 2$ bits.
 
-When we use empowerment in RL we maximise discounted accumulated empowerment over a trajectory: $\sum_{t}^{}\gamma^{t}\ I(s_{t + 1},\ a|\ s_{t})$, following the objective in Eq.~\eqref{eq:rl-objective}.
+We can formalise empowerment use as intrinsic reward: $\sum_{t}^{}\gamma^{t}\ \operatorname{PMI}(s_{t + 1},\ a|\ s_{t})$, following the objective in Eq.~\eqref{eq:rl-objective}.
 
-Here I is pointwise mutual information, MI is an expected value of PMI:
+Since MI is an expected value of PMI it's close to original definition:
 
-$I(X;Y) = E_{X,Y}\lbrack PMI(X,Y)\rbrack = \ \sum_{x \in X}\sum_{y \in Y}\ \  P(x,y) PMI(x, y)$
+$ \mathbb{E} \left[r_t^{\mathrm{PMI}}|S_t=s
+\right] = I_\pi(A;S'|S=s) \leq \mathcal{E}(s)$
 
-Technical note: Empowerment is a property of a state. In a way independent and unrelated to our policy. It's already defined as maximum capacity and we can't literally optimise it. When we write "empowerment maximisation" we mean optimising capacity channel of our policy over states it visits.
+Technical note: Empowerment is a property of a state, environment dynamics and the action space, not of our policy. It's already defined as maximum capacity and we can't literally optimise it. A behavioural policy may be trained both to approach this capacity and to visit states in which the capacity is high. We use the term "empowerment maximisation" for such cases.
 
 \subsection{Inverse model trick}\label{inverse-model-trick}
 
-We can train a model that predicts action that leads from starting state s0 to end state s1. Here is how it works:
+We can train a model to predict the action that caused a transition from state $s_t$ to state $s_{t+1}$ and then use it as empowerment estimator. Here is how it works:
 
-We can then estimate empowerment with
+We can then estimate empowerment with equation \ref{eq:empowerment-inverse-entropy}.\\
 
-\begin{equation}
-I(A;S'\mid s) = H(A\mid s)-H(A\mid S',s).
-\label{eq:inverse-model-entropy-form}
-\end{equation}
+$I(A;S'\mid s) = H(A\mid s)-H(A\mid S',s)$
 
 By definition we have for entropies:
 
 \begin{equation}
-H(A\mid s) = -\mathbb{E}_{p(a\mid s)}\log p(a\mid s).
+H(A\mid s) = -\mathbb{E}_{a \sim \pi(\cdot|s)}\log \pi(a\mid s).
 \label{eq:action-entropy}
 \end{equation}
 
 \begin{equation}
 H(A\mid S',s)
-= -\mathbb{E}_{p(a,s'\mid s)}\log p(a\mid S',s).
+= -\mathbb{E}_{\substack{
+      a \sim \pi(\cdot|s) \\
+      s' \sim p(\cdot|a,s)
+    }}\log p(a\mid S',s).
 \label{eq:inverse-action-entropy}
 \end{equation}
 
-p(a\textbar s) is known. It is distribution of actions under current policy $\pi(a|s)$
-
-Distribution of actions given previous and future states p(a\textbar s',s) is not known, but we can introduce additional distribution q(a\textbar s',s) as follows:
+The distribution $p(a \mid s)$ is known. It is the action distribution under the current policy $\pi(a|s)$.
+Distribution of actions given previous and future states $p(a \mid s',s)$ is not known, but we can approximate it with additional distribution $q(a \mid s',s)$. First we plug it in conditional entropy $H(A\mid S',s)$:
 
 \begin{equation}
 H(A\mid S',s)
-= -\mathbb{E}_{p(a,s'\mid s)}
+= -\mathbb{E}_{\substack{
+      a \sim \pi(\cdot|s) \\
+      s' \sim p(\cdot|a,s)
+    }}
 \log\frac{p(a\mid S',s)q(a\mid S',s)}{q(a\mid S',s)}.
 \label{eq:inverse-model-auxiliary-distribution}
 \end{equation}
@@ -418,52 +455,113 @@ Splitting the logarithm gives
 \begin{equation}
 \begin{aligned}
 H(A\mid S',s)
-={}&-\mathbb{E}_{p(a,s'\mid s)}\log q(a\mid S',s) \\
-&-\mathbb{E}_{p(a,s'\mid s)}
+={}&-\mathbb{E}_{\substack{
+      a \sim \pi(\cdot|s) \\
+      s' \sim p(\cdot|a,s)
+    }}\log q(a\mid S',s) \\
+&-\mathbb{E}_{\substack{
+      a \sim \pi(\cdot|s) \\
+      s' \sim p(\cdot|a,s)
+    }}
 \log\frac{p(a\mid S',s)}{q(a\mid S',s)}.
 \end{aligned}
 \label{eq:inverse-model-log-split}
 \end{equation}
 
-The second term is, by definition, the KL divergence. So:
+The second term is, by definition, the KL divergence. Since $S'$ is itself random, this divergence must subsequently be averaged over $p(s'|s)$:
+
+\begin{equation}
+D_{KL}\bigl(p(a \mid S',s),\| q(a \mid S', s) \bigr) = \mathbb{E}_{p(s'|s)} D_{\mathrm{KL}}
+\left(
+p(a|s',s)\|q(a|s',s)
+\right).
+\end{equation}
+
+Substitute in Eq. \ref{eq:inverse-model-log-split}:
 
 \begin{equation}
 H(A\mid S',s)
-= -\mathbb{E}_{p(a,s'\mid s)}\log q(a\mid S',s)
--D_{KL}\bigl(p(a\mid S',s)\,\|\,q(a\mid S',s)\bigr).
+= -\mathbb{E}_{\substack{
+      a \sim \pi(\cdot|s) \\
+      s' \sim p(\cdot|a,s)
+    }}\log q(a\mid S',s)
+-D_{KL}\bigl(p(a \mid S',s),\| q(a \mid S', s) \bigr).
 \label{eq:inverse-model-kl-decomposition}
 \end{equation}
 
 Substituting Eq.~\eqref{eq:inverse-model-kl-decomposition} into
-Eq.~\eqref{eq:inverse-model-entropy-form} gives
+Eq.~\eqref{eq:empowerment-inverse-entropy} gives
 
 \begin{equation}
 \begin{aligned}
 I(A;S'\mid s)
-={}&\mathbb{E}_{p(a,s'\mid s)}\log q(a\mid S',s)
--\mathbb{E}_{p(a\mid s)}\log p(a\mid s) \\
+={}&\mathbb{E}_{\substack{
+      a \sim \pi(\cdot|s) \\
+      s' \sim p(\cdot|a,s)
+    }}\log q(a\mid S',s)
+-\mathbb{E}_{a \sim \pi(\cdot|s)}\log \pi(a\mid s) \\
 &+D_{KL}\bigl(p(a\mid S',s)\,\|\,q(a\mid S',s)\bigr).
 \end{aligned}
 \label{eq:inverse-model-bound-decomposition}
 \end{equation}
 
-This gives us variation lower bound (ELBO) on empowerment, very similar to ELBO objective in variation autoencoder.
+p(a|s) is defined by our policy $\pi$:
 
 \begin{equation}
-I(A;S'\mid s)
-\geq \mathbb{E}_{p(a,s'\mid s)}\log q(a\mid S',s)
--\mathbb{E}_{p(a\mid s)}\log p(a\mid s).
+\begin{aligned}
+I_\pi(A;S'|s)
+&= \mathbb{E}_{\substack{
+      a \sim \pi(\cdot|s) \\
+      s' \sim p(\cdot|a,s)
+    }} \left[ \log q(a|s',s)-\log\pi(a|s) \right] \\
+&+ \mathbb{E}_{p(s'|s)}
+	D_{\mathrm{KL}}
+	\left(
+	p(a|s',s)\|q(a|s',s)
+	\right).
+\end{aligned}
+\end{equation}
+
+This gives us a variational lower bound on on-policy empowerment, and therefore lower bound on empowerment. This construction is similar to ELBO objective in variational autoencoder \cite{kingma2014autoencoding,doersch2016tutorial}.
+
+\begin{equation}
+I_\pi(A;S'|s)\geq
+\mathbb{E}_{\substack{
+  a \sim \pi(\cdot|s) \\
+  s' \sim p(\cdot|a,s)
+}}
+\left[ \log q(a|s',s)-\log\pi(a|s) \right]
 \label{eq:inverse-model-variational-bound}
 \end{equation}
 
-We can minimise divergence $D_{KL}$ term by maximising log-likelihood $log\ q(a\ |\ s,\ s')$ on the on-policy samples (a, s, s'). Unlike mine/infonce we need only positive samples for this case.
+
+We can minimise divergence $D_{KL}$ term by maximising log-likelihood $\log q(a | s, s')$ on the on-policy samples $(a, s, s')$. We need only positive samples for this case, unlike MINE or InfoNCE.
 
 For example if actions are continuous
 
 \begin{equation}
-q(a\mid s,s') = \mathcal{N}\bigl(a;\mu_{\theta}(s,s'),I\bigr).
+q_{\theta}(a\mid s,s') = \mathcal{N}\bigl(a;\mu_{\theta}(s,s'),\sigma_{\theta}(s, s')\bigr)
 \label{eq:inverse-model-gaussian}
 \end{equation}
+
+Then our reward function is:
+
+\begin{equation}
+r_t^{\mathrm{emp}}=\log q_{\theta}(a_t|s_t,s_{t+1})-\log\pi(a_t|s_t)
+\label{eq:inverse-empowerment-reward}
+\end{equation}
+
+Our new reward function has this relation with empowerment and on-policy empowerment $I_\pi$:
+
+\begin{equation}
+\mathbb{E}[r_t^{\mathrm{emp}}|S_t=s]
+\leq
+I_\pi(A;S'|s)
+\leq
+\mathcal{E}(s)
+\end{equation}
+
+Left bound becomes tight when $q(a|s,s') = p(a|s,s')$, right bound becomes tight when policy achieves maximum capacity for given state.
 
 We can obtain similar results for forward model that predicts future state from the equation
 
@@ -471,9 +569,9 @@ $I(A;S' \mid s) = H(S' \mid s) - H(S' \mid A,s)$
 
 Though in this case we have to learn distribution of future state given current $p(S'|s)\ $which is usually a much harder problem than learning the inverse model.
 
-For the most environments there are much less options for an action that have caused transition between states (s,s\textquotesingle) than for future states in p(s\textquotesingle\textbar s). For example in our grid world it's always only one possible action that causes transition between two cells, but there are 4 possible future states for the central cell.
+In most environments there are much less options for an action that have caused transition between states $(s,s')$  than there are possible future states under $p(s'|s)$. For example in our grid world it's always only one possible action that causes transition between two cells, but there are 4 possible future states for the central cell.
 
-The difficulty comes from simple models such as $q(a|s,\ s')\  = \mathcal{N}(s';\ \mu_{\theta}(s),\ I)\ $being inherently unimodal, not suitable for modeling a multimodal distribution. It's possible to make $\mu_{\theta}(s)$ output parameter for e.g. mixture of several Gaussians, or use more advanced and difficult techniques.
+The difficulty comes from simple models such as $q(s', s)  = \mathcal{N}(s'; \mu_{\theta}(s), I)$ being inherently unimodal, not suitable for modelling a multimodal distribution. It's possible to make $\mu_{\theta}(s)$ output parameter for e.g. mixture of several Gaussians, or use more advanced and difficult techniques.
 
 \begin{figure}[htbp]
 \centering
@@ -486,40 +584,68 @@ The difficulty comes from simple models such as $q(a|s,\ s')\  = \mathcal{N}(s';
 \label{fig:single-normal-mle-failure}
 \end{figure}
 
-Unimodal predictor will always output average and diffused(high variance) estimation for future state S.
+A unimodal predictor will place mean between modes and give diffuse(high variance) estimation for future state S as illustrated in Fig. \ref{fig:single-normal-mle-failure}.
 
 \subsection{Continuous(differential) entropy}\label{continuousdifferential-entropy}
 
-Continuous entropy behaves quite differently from discrete, in fact for a variable X with Delta-function density we have $h_{X} = - \infty$.
+Let's start with a definition of continuous entropy, it's usually noted as lower $h$ to distinguish from discrete case:
 
-If in inverse model reconstruction becomes possible to arbitrary precision, for example in deterministic environment empowerment may become infinite:
+\begin{equation}
+h(X)	= -\int p(x)\log p(x)\,dx
+\end{equation}
+
+Differential entropy of normal distribution:
+
+\begin{equation}
+	h(A) = \frac{1}{2}\log_{2}\bigl(2\pi e\sigma^{2}\bigr).
+	\label{eq:gaussian-differential-entropy}
+\end{equation}
+
+Continuous entropy behaves quite differently from discrete, in fact for a variable $X$ with Delta-function density we have $h_{X} = - \infty$.
+
+Mutual information on the other hand stay non-negative, but there is another issue. Consider this transition function:
+$S'=A+\epsilon$
+
+With action and noise following normal distribution:
+$A\sim\mathcal{N}(0, \sigma),\qquad \epsilon\sim\mathcal{N}(0,N)$. If action reconstruction becomes possible to arbitrary precision, in such deterministic environments empowerment may become infinite.
+
+For our inverse model we will have:
+
+$ h(A| S', s)=\frac{1}{2}\log(2\pi e N^2)
+\longrightarrow
+-\infty
+\qquad
+\text{as }N\to 0$
 
 \begin{equation}
 I(A;S'\mid s)
 = h(A\mid s)-h(A\mid S',s)
 = h(A\mid s)-(-\infty)
-= \infty.
+= \infty
 \label{eq:continuous-empowerment-infinite}
 \end{equation}
 
-Also for continuous actions it's possible to maximise empowerment by increasing actions magnitude. For normal distribution
 
-\begin{equation}
-h(A) = \frac{1}{2}\log_{2}\bigl(2\pi e\sigma^{2}\bigr).
-\label{eq:gaussian-differential-entropy}
-\end{equation}
+Also for continuous actions it's possible to maximise empowerment by increasing action magnitude:
+
+$ h(a|s) =
+\frac{1}{2}\log(2\pi e\sigma^2)
+\longrightarrow
+\infty
+\qquad
+\text{as }\sigma\to \infty$
 
 Thus, the policy will learn to maximise $h(A\mid s)$ by increasing the action range.
 
-Natural solution is to constraint the range to $A\  \in \lbrack a_{\min},\ a_{\max}\rbrack$ or restrict covariance.
+A natural solution is to constrain the range to $A\  \in \lbrack a_{\min},\ a_{\max}\rbrack$ or restrict covariance. To prevent entropy explosion in inverse model p(a∣s',s) we could add noise to observations or actions:
 
-To prevent entropy explosion in p(a∣s',s) we could add noise to observations:
+$p(a \mid s'\  + \ \epsilon,s)$ cannot perfectly recover $a$ anymore keeping entropy and mutual information finite.
 
-$p(a \mid s'\  + \ \epsilon,s)\ $cannot perfectly recover $a$ anymore keeping entropy and empowerment finite. For more detailed treatment of continuous entropy and mutual information see ``Handbook of differential entropy'' 978-1-4665-8317-7.
+For more detailed treatment of continuous entropy and mutual information see ``Handbook of differential entropy'' 978-1-4665-8317-7.
 
 \section{Multistep and single-step empowerment}\label{multistep-and-single-step-empowerment}
 
-Consider this simple 2 step environment, it does xor on two actions, always returns 0 at t=0 and t=1 :
+Consider this simple 2 step environment, it does xor on two actions, always returns 0 at t=0, xor result at t=2:
 
 T = 0 T = 1 T = 2, return xor(actions)
 
@@ -1079,9 +1205,10 @@ $description\ length\  \approx \  - \ log_{2}p\theta(s)\  < = \  - ELBO(s)\ /\ l
 
 \section{Problems with Empowerment and DIAYN}\label{problems-with-empowerment-and-diayn}
 
-Single-step empowerment is short-sighted. It can even be zero for obviously easy environments as shown in the xor environment example. Multistep empowerment is better, but it can't be applied without modifications to high-frequency long-term environments like RTS games. On the other hand DIAYN objective is global in a sense that we can sample individual states from a trajectory for it's estimation, and it is the same expected value. But empowerment can't be zero given one-steps or two step estimation.
+Single-step empowerment is short-sighted. It can even be zero for obviously easy environments as shown in the xor environment example. Multistep empowerment is better, but it can't be applied without modifications to high-frequency long-term environments like RTS games. On the other hand DIAYN objective is global in a sense that we can sample individual states from a trajectory, and it will provide valid lower bound estimation $I(Z ; single\ state) ≤ I(Z ; whole\ trajectory)$. But empowerment can be zero given one-step or two step estimation.
 
-DIAYN\textquotesingle s objective is limited in a sense that it is just for learning skills. Humans or animals use skills to achieve certain goals, skills are combined and used in certain order. DIAYN objective says nothing about how skills should be combined. More in more realistic architecture an agent would pursue long-term goals switching between skills as the situation evolves.
+DIAYN's objective is limited in a sense that it is just for learning skills. Humans or animals use skills to achieve certain goals, skills are combined and used in certain order. DIAYN objective says nothing about how skills should be combined. In more realistic architecture an agent would pursue long-term goals switching between skills as the situation evolves. It's possible to aggregate multiple steps to enable DIAYN to develop different temporal patters, for example achieving the same goal with different locomotion gaits. However it's become very easy for policy to develop pathological solution for skill discrimination e.g. just waiving manipulators in different pattern that are easy to classify. Another example of valid, but uninteresting optimum is in Figure \ref{state-space-traversal}. Assume out agent can move in 2d circle, starting from the centre and observe it's position. It's possible for policy to slice circle along radius and thus recover "skill" vector z while staying near the start. Other rewards such as novelty, e.g. euclidean distance from all states in minibatch could drive agent to explore much larger state-space.
+Our example shows that combination of intrinsic rewards can help counter each-others failure modes in some cases.
 
 Issues with empowerment can be addressed by introducing different time scales and state compression. In such case empowerment would be used to reward high-level actions that take many environmental steps to execute.
 
@@ -1089,28 +1216,16 @@ DIAYN skills can be such low-level actions. And skill selection can be trained b
 
 If we choose to use empowerment for only high-level action selection we have to decide which states to use and which to omit. Consider RTS game with 640x480 video frames as observations. Suppose we have high-level actions pursue, build expand, build unit, attack, flee etc. We can't use just pixel observations at skill boundary. Both policy and empowerment estimator would require a feature vector that encodes strategic situations in the game + more detailed description of the current situation, that is exact unit position, recent events such as ``hero just died''.
 
-Multi-layer SFA is a possible front-end to obtain the macro strategic state on which we measure empowerment or DIAYN MI.
+Multi-layer SFA is a possible front-end to obtain the macro strategic state on which we measure empowerment or DIAYN MI, but exact architecture remains an open research problem.
 
-{\def\LTcaptype{none} % do not increment counter
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\linewidth - 0\tabcolsep) * \real{1.0000}}@{}}
-\toprule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\includegraphics[width=6.02083in,height=6in]{figures/image9.png}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.48\textwidth]{figures/image9.png}\hfill
+\includegraphics[width=0.48\textwidth]{figures/image1.png}
+\caption{State-space partition and traversal. Left: DIAYN partitions the state space into skill-conditioned regions but does not guarantee that an arbitrary goal $g_0$ can be reached; increasing the number of skills may only make these regions thinner. Right: a sequence of reachable goal-conditioned regions $g_0$, $g_1$ and $g_2$ can support traversal through the state space.}
+\label{state-space-traversal}
+\end{figure}
 
-State space partition by DIAYN: no garanties that we can achieve a particular state g0. Increasing the number of skills will just make slices thinner. \\
-\end{longtable}
-}
-
-\includegraphics[width=6.02083in,height=6in]{figures/image1.png}
-
-\subsection{}\label{section-1}
-
-\subsection{}\label{section-2}
-
-\subsection{}\label{section-3}
 
 \section{Math Appendix}
 \label{math-appendix}
@@ -1199,23 +1314,64 @@ We can optimise this estimator by finding better function $T$ e.g. with gradient
 
 We conclude with discussion of possible experiments intended to test if existing intrinsic motivation methods can produce biological adaptability on different levels.
 
-\subsection{Environment for IM}
-There are two properties of biological environments that counter failure modes of information-based rewards:
-1) world is adversarial
-2) energy is scarce
+\subsection{Environment for intrinsic reward evaluation}
+Based on previous discussion of MI-based rewards and their "camping on a toy" limitations we propose an environment with natural constraints on camping(or other similarly useless) behaviour. There are two properties of biological environments that counter failure modes of information-based rewards:
 
-We introduce environment suitable for intrinsic reward evaluation.
+\begin{enumerate}
+  \item World is adversarial.
+  \item Energy is scarce.
+\end{enumerate}
 
+We design an environment where agents have an energy level. Analogously to physiological deficits, a low energy level reduces action amplitude and/or makes actions less predictable.
 
-Predator-prey with energy in 2d plane.
-action space:motion, rotation \\
-observations:angle and distance to near prey, energy level, nearby message\\
+Thus energy level affects the capacity of action to future state channel.
 
-additional mechanics:\\
-when energy level is low agents actions get lower magnitude and/or become noisy.
+We propose a predator--prey environment with the following observed state:\\
+$o_t = (sensor_t, e_t)$ 
+where $e_t$ is the energy level.
 
+Agents have a finite storage capacity $e_{max}$ and each action consumes energy:
 
-\subsection{recurrent model}
+$e_{t+1} = clip(e_t - c(a_t) + food_t, 0, e_{max})$
+
+Energy level affects actions:
+
+$a_{effective} = m(e_t) a_t + \sigma(e_t) \epsilon_t$
+
+Here $m$ is a magnitude function, might be as simple as $m(e_t)=\max(e_t,m_{\min})$.
+
+The function $\sigma$  determines the magnitude of motor noise and increases as $e_t$ decreases. for example we can define\\
+$\sigma(e_t) = \min(\sigma_{max}, - \ln(e_t / e_{max}))$ \\
+$\epsilon_t \sim \mathcal{N}(0, I)$
+
+Finding food or capturing prey increases the energy level without providing direct reward signal. 
+
+Note: as discussed earlier continuous actions requires non-zero observation or action uncertainty to keep mutual information finite.
+
+This environment would allow to test directly whether different combinations of intrinsic rewards lead to behaviour that maintains a stable energy level, analogous to energy homeostasis in biological organisms.
+
+Possible tests include environments with:
+\begin{enumerate}
+	\item controllable toy;
+	\item "noisy-tv";
+	\item communication channel between predators;
+	\item adversarial prey;
+\end{enumerate}
+
+Important ablations include disabling the effects of energy on actions and comparing stationary food with adversarial prey. This comparison is necessary because an  intrinsic reward may cause the agent to follow prey for reasons unrelated to energy regulation.\\
+Primary metrics to monitor:
+
+\begin{enumerate}
+	\item mean energy level
+	\item time spent on toys
+	\item spatial coverage
+	\item energy level at which the agent starts sustained movement towards prey
+    \item energy recovery time after reaching the minimum energy level
+\end{enumerate}
+
+Interesting extension is test conditions under which communication might develop e.g. when it's hard for an agent to catch the prey on it's own.
+
+\subsection{Recurrent model}
 
 We propose to study a network of recurrent modules where every module is treated as a local agent. Each agent has its own hidden state, observations, incoming messages, actions and intrinsic reward. There is no reward defined for the network as a whole. The modules can communicate during the forward pass, but messages are detached before being passed between agents. Consequently, gradients from one agent cannot propagate through the internal computations of another agent.
 
@@ -1244,9 +1400,34 @@ This type of agent may be evaluated in a collectively embodied task e.g. sensor 
 
 This experiment is not intended to prescribe a final architecture. Its purpose is to test whether local intrinsic objectives, recurrent memory, communication and a shared learning rule are sufficient ingredients for the emergence of functional differentiation and higher-level adaptive organisation.
 
-\subsection{automatic curriculum in two-level agent}
+\subsection{Automatic curriculum in a two-level world model agent}
 
-Hierarchical empowerment?
+The limitations discussed in Section~\ref{problems-with-empowerment-and-diayn} suggest an experiment in which motor control and long-term goal selection are learned by separate agents potentially operating at different time scales. The proposed architecture consists of a low-level agent, a high-level agent and a world model. The world model supplies learned state representations and intrinsic signals for training both agents.
+
+Training starts with the low-level agent acting without a valid goal. Its reward is a mixture of learning progress, prediction error and diversity in the learned embedding space. This stage has two purposes: to collect diverse experience for the world model and to train a low-level policy capable of producing non-trivial transitions before it is asked to follow goals. For initial goal conditioning training obvious choices are hindsight training and virtual hindsight training on wm-generated episodes once wm is stable.
+
+After this initial stage, the high-level agent generates a target embedding $g_t$. The low-level policy receives both the current representation $s_t$ and the target $g_t$, and is rewarded for reducing their distance. A simple progress reward is
+
+\begin{equation}
+r^{\mathrm{low}}_t = d(z_t,g_t)-d(z_{t+1},g_t).
+\end{equation}
+
+The high-level action is held for several environment steps(determined by separate switch head), so selecting one target embedding corresponds to a temporally extended action. The two agents can therefore learn different functions: the low-level agent learns how to realise changes in the representation space, while the high-level agent learns which changes are informative, reachable and useful for continued exploration.
+
+
+The target space should discard high-frequency details that cannot be controlled over the selected horizon. Slowly varying representations, including representations obtained with SFA-like objectives, are a possible goal space. Long-term empowerment may then be estimated between high-level actions and future states in this compressed representation rather than between individual motor commands and raw observations.
+
+Overall process should achieve state-space traversal similar to one in Figure \ref{state-space-traversal}.
+
+This training process resembles developmental motor learning: initially unstructured self-generated actions establish sensorimotor regularities, after which achieved outcomes can become goals for increasingly directed behaviour. Motor competence and goal selection may then form a coupled curriculum in which each expands the  learning opportunities of the other.
+
+This experiment tests whether temporal hierarchy addresses two complementary limitations. Skill-discovery objectives such as DIAYN do not specify how independently learned skills should be ordered, while short-horizon empowerment does not represent consequences separated from motor actions by many environment steps. A two-level agent instead treats goal-conditioned behaviour as the low-level action space of a slower decision process.
+
+
+
+
+
+
 
 TODO:  
 1. Какие классы intrinsic objectives существуют.
@@ -1254,4 +1435,3 @@ TODO:
 3. Почему локальная оптимизация не гарантирует полезного поведения.
 4. Как representation, embodiment и temporal abstraction меняют результат.
 5. Какие эксперименты позволяют проверить предложенную картину.
-
