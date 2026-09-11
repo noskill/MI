@@ -25,7 +25,6 @@ We propose perspective research direction of adaptability in artificial neural n
 
 A broader question motivating the research agenda is whether local intrinsic learning signals can produce not only exploration, but also progressively more complex  adaptive behaviour and organization at higher levels.
 
-
 We propose biologically inspired recurrent architecture and a specific environment suitable for evaluation of intrinsic motivation methods.
 
 
@@ -62,7 +61,7 @@ Some notable examples of plasticity and problem solving in image \ref{low-level-
 \caption{Adaptation of neurons in planaria to barium chloride. After exposure to BaCL2 neurons in planaria's head die off. New head has resistant neurons. It's unlikely that planaria has ever been exposed to BaCL2 before.}
 \end{figure}
 
-\hl{But perhaps the most striking and important case is cancer plasticity. Tumors switch between metabolic pathways (e.g., glycolysis to oxidative phosphorylation) to survive fluctuating conditions, a form of tissue-level adaptability.}
+But perhaps the most striking and important case is cancer plasticity. Tumors switch between metabolic pathways (e.g., glycolysis to oxidative phosphorylation) to survive fluctuating conditions, a form of tissue-level adaptability.
 
 
 For more detailed overview see Michael Levin's interview \emph{Michael Levin: Intelligence Beyond the Brain} \cite{levin_intelligence_beyond_brain}.
@@ -641,13 +640,13 @@ A natural solution is to constrain the range to $A\  \in \lbrack a_{\min},\ a_{\
 
 $p(a \mid s'\  + \ \epsilon,s)$ cannot perfectly recover $a$ anymore keeping entropy and mutual information finite.
 
-For more detailed treatment of continuous entropy and mutual information see ``Handbook of differential entropy'' 978-1-4665-8317-7.
+For a more detailed treatment of continuous entropy and mutual information, see \cite{michalowicz2013handbook}.
 
 \section{Multistep and single-step empowerment}\label{multistep-and-single-step-empowerment}
 
-Consider this simple 2 step environment, it does xor on two actions, always returns 0 at t=0, xor result at t=2:
+Consider this simple 2 step environment. Two actions are possible a0=0, and a1=1. The environment always returns 0 at t=0 and t=1, and xor of two actions at t=2:
 
-T = 0 T = 1 T = 2, return xor(actions)
+T = 0 T = 1 T = 2, return a0 xor a1
 
 observe 0→a0 →observe 0 → a1 → observe 1
 
@@ -655,29 +654,115 @@ observe 0→a0 →observe 0 → a0 → observe 0
 
 observe 0→a1 →observe 0 → a0 → observe 1
 
-observe 0→a1 →observe 0 → a1 → observe 0
+observe 0→a1 →observe 0 → a1 → observe 0\\
 
-$O_{2}$ is independent from $O_{1}$ and $A_{1}$ and $\ I(A_{1};S_{2}|\ s_{1})\  = \ 0$
+The first action produces no visible one-step change:
+$I(A_0;S_1∣S_0)=0$.
 
-But $\ I(A_{1}A_{2};S_{2}|\ s_{1})\  > \ 0$
+$O_{2}$ is independent from $O_{1}$ and $A_{1}$ and $\ I(A_{1};S_{2}|\ s_{1})  =  0$
 
-This would be two-step empowerment. We can define k-step empowerment as:
+On the other hand if agent is recurrent it(and inverse model) remembers it's actions. In such case we have $I(A_0, A_1;S_2∣S_0) = 1$ bit.
 
-$I_{k}(s0)\  \triangleq \ I(A_{0:k - 1}\ ;\ Sk\ │\ s0)\ $
+Note that final state doesn't identify each action individually:\\
+$S_2=0$ implies $(A_0, A_1)∈ {00,11}$;\\
+$S_2=1$ implies $(A_0, A_1) ∈{01,10}$\\
+
+This example shows that summing local quantities,
+$\sum_t I(A_t;S_{t+1}\mid S_t)$ can miss information carried jointly by multiple actions.
+
+$I(A_{0}A_{1};S_{2} \mid s_{0})$ in our example would be two-step empowerment. We can define k-step empowerment as:
+
+$I_{k}(s0)  \triangleq  \max_{p(a_{0:k-1}|s_0)} I(A_{0:k - 1} ; Sk \mid s0) $
 
 With intermediate states added it is called trajectory empowerment.
 
-$I_{k}(s_{0})\  \triangleq \ I(A_{0:k - 1}\ S_{1:\ k - 1};\ S_{k}\ │\ s_{0})$
+$I_{k}(s_0)  \triangleq \max_{p(a_{0:H-1}|s_0)}  I(A_{0: k - 1} ; S_{1: k} \mid s_{0})$
+
+Knowing intermediate states makes it easier to recover actions so $I(A_0:k−1;S_k∣S_0) ≤ I(A_0:k−1;S_1:k∣S_0)$.\\
+Let's expand first equation with inverse model:
+
+\begin{equation}
+	 I(A_{0:k - 1} ; Sk \mid s_0) \geq \mathbb{E} \log q(A_{0:k−1}|S_k, s_0) − \log p_π(A_{0:k−1}∣s_0​)
+\end{equation}
+
+
+\subsection{Marginal and Causal objective}
+We can sample all actions at s0 and then execute them one by one. In this case actions probability term is easy to compute:
+$p_\pi(a_{0:H-1}\mid s_0) = \prod_{t=0}^{H-1} \pi(a_t \mid s_0, a_{0:t-1})$
+
+Or we are sampling actions one by one, a new action at each new state. In this case to compute actions probability we need expectation over all possible trajectories between $s_0$ and $s_T$.
+
+$p_\pi(a_{0:H-1}\mid s_0) = \int
+p_\pi(a_{0:H-1}, s_{1:H-1} \mid s_0)
+\,ds_{1:H-1}$
+
+This is intractable to compute besides most simple cases. If we have a model of the environment(see sec. \ref{world-models} ) we can compute Monte-Carlo approximation by doing virtual rollouts with fixed initial state and fixed actions. Then approximation is average probability of sequence of actions over all virtual episodes. We can call it marginal MI objective since it marginalises over trajectory.
+
+\begin{equation}
+\begin{aligned}
+w_j=\prod_{t=0}^{H-1}
+\pi(\bar a_t\mid C^{(j)}_t) \\
+\widehat p_\pi(\bar a_{0:H-1}\mid s_0)=\frac1N\sum_{j=1}^{N}w_j 
+\end{aligned}
+\end{equation}
+
+Here $C^{(j)}_t$ is all relevant inputs to the policy for given episode $j$.
+
+Another option is to plug in on-policy likelihood:
+
+\begin{equation}
+I(A_{0:k - 1} ; Sk \mid s_0) \geq \mathbb{E} \log q(A_{0:H−1};S_H| s_0) − \sum_{t=0}^{H-1}\log \pi(A_t\mid S_{0:t},A_{0:t-1})
+\end{equation}
+
+This objective can be named causal since it uses causal action entropy $\sum_t H_{\pi}(A_t|S_t, A_{i<t})$ term.
+
+\subsection{cards and notebook environment}
+
+Consider k-step environment:
+
+At each time dealer draws a random card $C_t$ and stacks it on the table. The robot performs action $A_t = C_t$ such as:
+
+\begin{itemize}
+	\item wave hand left if the card is red and right if card is black
+	\item write what card it sees to the notebook
+\end{itemize}
+
+After H cards are drawn it's possible to examine stacked cards and determine which actions the robot took. There are total $2^k$ possible actions sequences. So we will get up to k bits of information\\
+
+$\begin{aligned}
+	r
+	&=
+	\log q(\bar a_{0:k-1}\mid S_k, s_0)- \log \widehat p_\pi(\bar a_{0:k-1}\mid s_0)\\
+	&\longrightarrow
+	0-\log 2^{-H}\\
+	&=H\log 2.
+\end{aligned}$
+
+On other hand entropy term in causal objective is always zero since each action is determined by the card. So copying environment is not rewarded. Thus marginal objective $\geq$ causal. It's important to note that causal objective is not a mutual information, it can be negative. Consider our card environment but this time cards are removed after being shown to the robot, $S_2=blank$. Policy still copies actions so $π(A_1=C| S_1=C) = 1$. Then causal entropy is $H(A_1∣S_0,S_1)=0$. Inverse model can't reconstruct $A_1$ from $S_0,S_2$, so it assigns equal probability 1/2 and $\log_2 π(A_1∣S_0,S_1) = -1$. Thus we have $I_causal = -1 - 0 = -1$.
+
+On other hand for an agent with a notebook maximum is achieved with uniform policy $H(A_t∣S_t)=\log K$ and $J=k \log K$. Thus the policy might learn to write down random symbols to notebook. Similar failure modes exist for all information-based rewards. This issue is discussed in more details in the next section. 
+
+We can also sample so-called latent plan $U$, or skill at the begging and optimise for this objective 
+
+with objective
+$\mathcal{E}^{U}_H(s_0) = \max_{p(u|s_0)} I(U;S_H|s_0)$
+
+with variational lower bound
+
+$I(U;S_H\mid s_0) \ge \mathbb{E}\left[\log q(U \mid S_H,S_0) - \log p(U \mid s_0) \right]$
+
+
+This option is discussed in sec. \ref{diversity-is-all-you-need} and \ref{problems-with-empowerment-and-diayn}.
 
 \section{Local Optima}\label{local-optima}
 
-Many people enjoy computer games, games can even hook some humans into addictive patterns. Empowerment is suitable for modelling this effect. The reward is high where there are many visited states, but the environment is controllable. An agent might get obsessed with flipping a switch that has tons of settings because it's easy to manipulate and offers immediate, predictable feedback. In the real world there are resource constraints which won't allow us to fixate on a game. Prediction-error driven agents can get stuck observing a noise source. Similarly, empowerment-driven agent can stuck observing controllable objects with many states.
+Many people enjoy computer games, games can even hook some humans into addictive patterns. Empowerment is suitable for modelling this effect. The reward is high where there are many visited states, but the environment is controllable. An agent might get obsessed with flipping a switch that has a lot of settings because it's easy to manipulate and offers immediate, predictable feedback. Prediction-error driven agents can get stuck observing a noise source. Similarly, empowerment-driven agent can stuck interacting with a controllable objects with many states.
 
-This problem arises for all information-based rewards and it's likely not solvable on agent's side.. People like playing video games, but even ones with addiction won't stick there because of resource constraints. Any real environment has resource constraints and energy/resource sources so we can introduce such constraints into virtual environments.
+This problem arises for all information-based rewards and it's likely not solvable on agent's side.. People like playing video games, but even ones with addiction won't stick there because of resource constraints. Any real environment has resource constraints and energy and resource sources. We can introduce such constraints into virtual environments.
 
 Lets add to the state energy coordinate \hl{\emph{e}∈{[}0,1{]}}
 
-$S\  = \ (s,\ e)$
+$S  =  (s, e)$
 
 Every action consumes Δe \textgreater{} 0
 
@@ -687,19 +772,17 @@ actions are disabled. Formally, p(s'∣s,a) grows broader ⇒ H(S'∣a,s) increa
 
 (pick-ups, charging pads, food) that reset \emph{e} upward.
 
-Therefore a pure empowerment maximiser already obtains an intrinsic
+Therefore empowerment maximiser can obtains an intrinsic drive to:
 
-drive to:
+\begin{enumerate}
+	\item stay away from low-energy states
+	\item periodically reach recharge regions
+	\item optimise its action sequence for long-term discounted reward
+\end{enumerate}
 
- 1. stay away from low-energy states,\\
- 2. periodically reach recharge regions,\\
- 3. optimise its action sequence for long-term discounted reward.
+I.e. the agent behaves like a living organism: forage → play/act → return to base → repeat.
 
-I.e. the agent behaves like a living organism: forage → play/act →
-
-return to base → repeat.
-
-It is easy to introduce to environment with direct biological analogy, like predator-pray, and harder for other cases. On the other hand in a multi-agent world it might not be necessary. Other agents will natural brake against ``camping on a toy'' behaviour.
+It is easy to introduce to an environment with direct biological analogy, like predator-prey, and harder for other cases. On the other hand in a multi-agent world it might not be necessary. Other agents will be a natural brake against "camping on a toy" behaviour.
 
 • Disturbance: other agents policy injects variability into transition probability $p(s_{t + 1}|\ a_{t},\ s_{t})$ leading to increase of entropy of future state $H(S' \mid A,s)$ conditional on action.
 
@@ -712,24 +795,25 @@ When the multi-agent cure might fail:
 1. Predictable opponents\\
 If other agents adopt highly regular or submissive policies,
 
-H(S'∣A,s) can still be low → empowerment can stay high.
+H(S`∣A,s) can still be low → empowerment can stay high.
 
 2. Collusion / territorial partition\\
 Agents may implicitly agree on ``you keep toy \#1, I keep toy \#2''. Each finds a private controllable niche.
 
 \section{Empowerment in communication}\label{empowerment-in-communication}
 
-Now consider there are two agents a and b that can send messages to each other from some alphabet M.
+Communication extend an agent's action channel beyond its own actuators. By changing the behaviour of another adaptive system, a signal may alter the sender's future observations and controllable states. As mentioned in seq. \ref{motivation-from-biology} communication is ubiquitous in multicellular organism so it's important to consider how it affects agents with intrinsic motivation.
 
-High empowerment reward is achievable for both agents in such a situation.
-
-Agent a selects message m randomly and sends it to b. If b responds predictably, e.g. (m + 1) \% \textbar A\textbar{} then
-
-We have high $P(S' \mid m,s_0)$ and high $H(S' \mid s_0)$ (since response can't be predicted without knowing the message). Since next state now is completely predictable we get empowerment equal to $H(A \mid s)$. In this case both agents will achieve maximum reward with uniform distribution over M.
+In the most simple case there are two agents a and b that can send messages to each other from some alphabet M. They take turns: $a$ sends a message and waits for a response from $b$. Then $b$ sends it's message and waits for response. High empowerment reward is achievable for both agents in such a situation. Agent $a$ selects message m randomly and sends it to b. If $b$ responds predictably, e.g. (m + 1) \% \textbar A\textbar{} then we have high $P(S' \mid m,s_0)$ and high $H(S' \mid s_0)$ (since response can't be predicted without knowing the message). Since next state now is completely predictable we get empowerment equal to $H(A \mid s)$. In this case both agents will achieve maximum reward with uniform distribution over M.
 
 Achievable empowerment is approximately log\textbar A\textbar{}
 
-With limited bandwidth agents might develop some kind of turn-taking schedules. But with energy constraints agents might refuse sending a response, lowering other agent's empowerment.
+With limited bandwidth agents might develop some kind of turn-taking schedules. But with energy constraints agents might refuse sending a response, lowering other agent's empowerment. We can think of different levels in such systems:\\
+self, or per-agent empowerment - increasing each own control\\
+transfer empowerment - increasing control of other agents\\
+joint empowerment - group of communicating agents constitue organism, or meta-agent and can optimise for joint objective
+
+We can guess that local self-empowerment may lead to competition, domination, no-communication and possibly even to organism level cooperation.
 
 \section{MINE and InfoNCE}\label{mine-and-infonce}
 
